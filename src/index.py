@@ -1,5 +1,6 @@
 import pymongo
 import sys
+from pathlib import Path
 import os
 import pandas as pd
 import json
@@ -7,12 +8,19 @@ from pprint import pprint
 from myLogger import myLog
 from dbConnection import myCollection
 log = myLog(__name__)
-#DataBase Connection
-# client = pymongo.MongoClient(
-#     "mongodb+srv://root:root@cluster-aqz47.mongodb.net/test?retryWrites=true&w=majority"
-# )
-# myDatabase = client['personal_project']
-# myCollection = myDatabase['students']
+from os import listdir
+from os.path import isfile, join
+
+# from dotenv import load_dotenv
+# load_dotenv()
+
+# # OR, the same with increased verbosity
+# load_dotenv(verbose=True)
+
+# # OR, explicitly providing path to '.env'
+# # python3 only
+# env_path = Path('.') / '.env'
+# load_dotenv(dotenv_path=env_path)
 
 # myCollection.insert_one({
 #     "registration_id": 15465,
@@ -34,12 +42,29 @@ log = myLog(__name__)
 # for document in cursor:
 #     pprint(document)
 #     log.info(document)
+filesAdded = dict()
+
+filepath = '/home/user/nitish/personal_projects/python-csv-to-mongodb-multithreading/src/DataGeneration/StudentData/'  # pass csv file path
+
+
+def csvToDatabase(filepath):
+    while (1):
+        filesFetched = [
+            files for files in listdir(filepath)
+            if isfile(join(filepath, files))
+        ]
+        for i in range(len(filesFetched)):
+            fileName = filesFetched[i].split('.')[0]
+            if fileName not in filesAdded:
+                import_content(filepath + filesFetched[i])
+                filesAdded[fileName] = 1
+                log.info('{} is added in DB'.format(fileName))
 
 
 def import_content(filepath):
     # cdir = os.path.dirname(__file__)
     # file_res = os.path.join(cdir, filepath)
-
+    print(filepath)
     data = pd.read_csv(filepath)
     data_json = json.loads(data.to_json(orient='records'))
     # myCollection.()
@@ -47,5 +72,5 @@ def import_content(filepath):
 
 
 if __name__ == "__main__":
-    filepath = '/home/user/nitish/personal_projects/python-csv-to-mongodb-multithreading/src/DataGeneration/student.csv'  # pass csv file path
-    import_content(filepath)
+    csvToDatabase(filepath)
+    # import_content(filepath)
