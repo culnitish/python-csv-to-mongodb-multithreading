@@ -5,7 +5,7 @@ from decimal import Decimal
 from faker import Faker
 from faker.providers import BaseProvider
 
-RECORD_COUNT = 10
+RECORD_COUNT = 10000
 fake = Faker()
 
 

@@ -6,10 +6,13 @@ import pandas as pd
 import json
 from pprint import pprint
 from myLogger import myLog
-from dbConnection import myCollection
+import time
+import threading
 log = myLog(__name__)
+from dbConnection import myCollection
 from os import listdir
 from os.path import isfile, join
+import logging
 
 # from dotenv import load_dotenv
 # load_dotenv()
@@ -22,55 +25,60 @@ from os.path import isfile, join
 # env_path = Path('.') / '.env'
 # load_dotenv(dotenv_path=env_path)
 
-# myCollection.insert_one({
-#     "registration_id": 15465,
-#     "student_name": "Abhishek Kumar",
-#     "date_of_birth": "08/01/2003",
-#     "email": "abhishek@gmail.com",
-#     "address": "Mathura",
-#     "department": "Computer Science",
-#     "sub1": 45,
-#     "sub2": 67,
-#     "sub3": 78,
-#     "sub4": 67,
-#     "sub5": 78
-# })
-# # print(myCollection)
-# data = myCollection.find({"registration_id": 15265}).count_documents()
-# cursor = myCollection.find({})
-# # print(cursor)
-# for document in cursor:
-#     pprint(document)
-#     log.info(document)
 filesAdded = dict()
 
 filepath = '/home/user/nitish/personal_projects/python-csv-to-mongodb-multithreading/src/DataGeneration/StudentData/'  # pass csv file path
 
 
-def csvToDatabase(filepath):
-    while (1):
-        filesFetched = [
-            files for files in listdir(filepath)
-            if isfile(join(filepath, files))
-        ]
-        for i in range(len(filesFetched)):
-            fileName = filesFetched[i].split('.')[0]
-            if fileName not in filesAdded:
-                import_content(filepath + filesFetched[i])
-                filesAdded[fileName] = 1
-                log.info('{} is added in DB'.format(fileName))
-
-
-def import_content(filepath):
+def import_content(filepath, index):
     # cdir = os.path.dirname(__file__)
     # file_res = os.path.join(cdir, filepath)
     print(filepath)
     data = pd.read_csv(filepath)
+    logging.info('Thread {} is executing : '.format(index))
     data_json = json.loads(data.to_json(orient='records'))
-    # myCollection.()
+    # myCollection.remove({})
     myCollection.insert_many(data_json)
 
 
+def csvToDatabase(filepath):
+    num = 3
+    while (num):
+        filesFetched = [
+            files for files in listdir(filepath)
+            if isfile(join(filepath, files))
+        ]
+        threads = list()
+
+        for i in range(len(filesFetched)):
+            logging.info("csvToDatabase : create and start thread %d.", i)
+
+            fileName = filesFetched[i].split('.')[0]
+            if fileName not in filesAdded:
+                x = threading.Thread(target=import_content,
+                                     args=(
+                                         filepath + filesFetched[i],
+                                         i,
+                                     ))
+                threads.append(x)
+                logging.info('Thread {} is starting'.format(i))
+                x.start()
+                # import_content(filepath + filesFetched[i])
+                filesAdded[fileName] = 1
+                for index, thread in enumerate(threads):
+                    logging.info("csvToDatabase : before joining thread %d.",
+                                 index)
+                    thread.join()
+                    logging.info("csvToDatabase : thread %d done", index)
+                    logging.info('{} is added in DB by thread {}'.format(
+                        fileName, i))
+        num -= 1
+
+
 if __name__ == "__main__":
+    format = "%(asctime)s: %(message)s"
+    logging.basicConfig(format=format, level=logging.INFO, datefmt="%H:%M:%S")
+    start = time.time()
     csvToDatabase(filepath)
-    # import_content(filepath)
+    end = time.time()
+    print(end - start)
