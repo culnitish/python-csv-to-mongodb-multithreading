@@ -22,7 +22,7 @@ class DepartmentProvider(BaseProvider):
 
 
 def create_csv_file():
-    for i in range(10):
+    for i in range(7):
         fileName = 'student_' + str(i + 1) + '.csv'
         with open('StudentData/' + fileName, 'w', newline='') as csvfile:
             fieldnames = [

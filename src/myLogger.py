@@ -10,7 +10,7 @@ def myLog(name):
         '[%(created)f]-[%(levelname)s ]-[%(filename)s]-[%(name)s]-[%(lineno)d]-[%(funcName)s]-[%(message)s]'
     )
     # add a rotating handler
-    handler = RotatingFileHandler("test.log", maxBytes=300, backupCount=5)
+    handler = RotatingFileHandler("test.log", maxBytes=0, backupCount=5)
     handler.setFormatter(f_format)
     logger.addHandler(handler)
     return logger
