@@ -4,8 +4,12 @@ from time import time
 from decimal import Decimal
 from faker import Faker
 from faker.providers import BaseProvider
+from configparser import ConfigParser
+config = ConfigParser()
+config.read('../../config.ini')
 
-RECORD_COUNT = 10000
+# RECORD_COUNT = 10000
+# NO_OF_CSV_FILES =7
 fake = Faker()
 
 
@@ -21,8 +25,8 @@ class DepartmentProvider(BaseProvider):
         return random.choice(departments)
 
 
-def create_csv_file():
-    for i in range(7):
+def create_csv_file(noOfCsvFiles,noOfRecords):
+    for i in range(noOfCsvFiles):
         fileName = 'student_' + str(i + 1) + '.csv'
         with open('StudentData/' + fileName, 'w', newline='') as csvfile:
             fieldnames = [
@@ -32,7 +36,7 @@ def create_csv_file():
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
             writer.writeheader()
-            for i in range(RECORD_COUNT):
+            for i in range(noOfRecords):
                 writer.writerow({
                     'registration_id':
                     fake.random_int(min=101, max=8978767),
@@ -62,6 +66,8 @@ def create_csv_file():
 if __name__ == '__main__':
     fake.add_provider(DepartmentProvider)
     start = time()
-    create_csv_file()
+    noOfCsvFiles = int(config['CSVGENERATE']['NO_OF_CSV_FILES'])
+    noOfRecords = int(config['CSVGENERATE']['RECORD_COUNT'])
+    create_csv_file(noOfCsvFiles,noOfRecords)
     elapsed = time() - start
     print('created csv file time: {}'.format(elapsed))
