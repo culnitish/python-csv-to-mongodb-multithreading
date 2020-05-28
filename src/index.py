@@ -31,26 +31,27 @@ def time_it(method):
         return result
     return wrapper
 
-@time_it
 def csvToDatabase(filepath):
     print(filepath)
     data = pd.read_csv(filepath)
     data_json = json.loads(data.to_json(orient='records'))
-    myCollection.remove({})
-    # myCollection.insert_many(data_json)
+    # myCollection.remove({})
+    myCollection.insert_many(data_json)
     logging.info('{} Filename is added in Database'.format(filepath))
-    
 
-def threadExecution(filepath,desiredThreadCount):
+@time_it
+def threadGeneration(filepath,desiredThreadCount):
     num = 1
     while (num):
         try:
             filesFetched = [files for files in listdir(filepath) if isfile(join(filepath, files))]
+            print(filesFetched)
             threadsArr = list()
             with concurrent.futures.ThreadPoolExecutor(max_workers=desiredThreadCount) as executor:
                 for i in range(len(filesFetched)):
                     fileName = filesFetched[i].split('.')[0]
                     if fileName not in filesAdded:
+                        logging.info('New Thread is created')
                         executor.submit(csvToDatabase,filepath + filesFetched[i])
                         filesAdded[fileName] = 1
                     
@@ -63,7 +64,5 @@ if __name__ == "__main__":
     '''Config file Retirieved'''
     threadCount = int(config['THREADINFO']['THREAD_COUNT'])
     filepath = config['FILEINFO']['FILE_LOC']
-    print(threadCount,filepath)
     '''Function to create Threads'''
-    threadExecution(filepath,threadCount)
-        
+    threadGeneration(filepath,threadCount)
